@@ -1,0 +1,25 @@
+name: "ADD - Dedicado a adições"
+description: Sugira uma funcionalidade, IFPI Mon ou documentação
+title: "[ADD] "
+labels:
+  - enhancement
+  - feature
+body:
+  - type: markdown
+    attributes:
+      value: Obrigado por contribuir com uma ideia para o projeto.
+  - type: textarea
+    id: proposta
+    attributes:
+      label: O que deve ser adicionado?
+      description: Descreva a proposta e por que ela seria útil.
+      placeholder: Explique sua ideia de forma objetiva.
+    validations:
+      required: true
+  - type: textarea
+    id: detalhes
+    attributes:
+      label: Detalhes adicionais
+      description: Inclua exemplos, referências ou outras informações, se houver.
+    validations:
+      required: false

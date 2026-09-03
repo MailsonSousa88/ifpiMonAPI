@@ -1,0 +1,27 @@
+name: "FIX - Dedicado a correções"
+description: Relate um erro ou comportamento inesperado
+title: "[FIX] "
+labels:
+  - bug
+  - fix
+  - hotfix
+body:
+  - type: markdown
+    attributes:
+      value: Obrigado por ajudar a melhorar o projeto.
+  - type: textarea
+    id: problema
+    attributes:
+      label: O que aconteceu?
+      description: Descreva o erro e o comportamento que você esperava.
+      placeholder: Explique o problema de forma objetiva.
+    validations:
+      required: true
+  - type: textarea
+    id: reproducao
+    attributes:
+      label: Como reproduzir?
+      description: Informe os passos necessários para observar o erro.
+      placeholder: "1. Execute...\n2. Acesse...\n3. Observe..."
+    validations:
+      required: true
