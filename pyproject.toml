@@ -1,7 +1,7 @@
 [project]
 name = "ifpimonapi"
 version = "0.1.0"
-description = "Add your description here"
+description = "API de consulta de IFPI Mons desenvolvida com FastAPI"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

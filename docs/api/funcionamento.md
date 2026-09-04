@@ -1,235 +1,286 @@
-# Funcionamento da API
+# Funcionamento atual da IFPI Mon API
 
-Este documento apresenta o funcionamento esperado da IFPI Mon API do ponto de
-vista de quem envia uma requisição. Para conhecer a organização interna do
-código e a responsabilidade de cada camada, consulte a
-[documentação de arquitetura](arquitetura.md).
+Este documento apresenta como executar e consumir as funcionalidades que já
+existem no projeto. A organização interna está detalhada em
+[Arquitetura atual da API](arquitetura.md).
 
-> [!NOTE]
-> O projeto ainda está em sua estrutura inicial. As rotas e os dados mostrados
-> aqui são exemplos que orientam a implementação e podem mudar durante o
-> desenvolvimento.
+## Executar o projeto
 
-## 1. O que é uma API?
+Na raiz do repositório, instale as dependências:
 
-Uma API permite que sistemas diferentes se comuniquem por meio de contratos.
-Na IFPI Mon API, um cliente — navegador, aplicativo ou outra API — envia uma
-requisição HTTP e recebe uma resposta HTTP, normalmente representada em JSON.
-
-Cada requisição informa:
-
-- **método HTTP:** qual operação deve ser realizada;
-- **endereço:** qual recurso será acessado;
-- **parâmetros:** informações presentes na URL ou na consulta;
-- **cabeçalhos:** metadados, como o tipo do conteúdo e autenticação;
-- **corpo:** dados enviados para criar ou alterar um recurso.
-
-Uma resposta contém:
-
-- **status HTTP:** informa se a operação funcionou;
-- **cabeçalhos:** metadados da resposta;
-- **corpo:** resultado da operação ou detalhes do erro.
-
-## 2. Visão geral
-
-O fluxo começa quando o cliente envia uma requisição e termina quando recebe
-uma resposta. Internamente, a requisição atravessa camadas com responsabilidades
-específicas.
-
-```mermaid
-flowchart LR
-    C[Cliente] -->|Requisição HTTP| API[IFPI Mon API]
-    API --> V[Validação dos dados]
-    V --> RN[Execução das regras de negócio]
-    RN --> D[(Repositório em memória)]
-    D --> RN
-    RN --> R[Montagem da resposta]
-    R -->|Resposta HTTP em JSON| C
-
-    V -. Dados inválidos .-> E[Tratamento de erros]
-    RN -. Regra não atendida .-> E
-    D -. Falha de acesso .-> E
-    E --> R
+```bash
+uv sync
 ```
 
-### Armazenamento inicial
+Inicie o servidor de desenvolvimento:
 
-Na primeira versão, a API não utilizará um banco de dados externo. Os IFPI Mons
-serão fornecidos como dados mockados e mantidos por um repositório em memória.
-Isso significa que:
+```bash
+uv run fastapi dev api/main.py
+```
 
-- não será necessário instalar ou configurar um servidor de banco de dados;
-- leituras e alterações serão feitas em uma coleção mantida pela aplicação;
-- os dados existirão somente enquanto a aplicação estiver em execução;
-- ao reiniciar a aplicação, os dados voltarão ao estado mockado inicial;
-- essa implementação não é indicada para armazenar dados definitivos em
-  produção.
+Por padrão, o servidor fica disponível em:
 
-A API acessará esses dados por meio de um contrato de repository. Por isso, o
-funcionamento das rotas e dos casos de uso não ficará preso ao armazenamento em
-memória. No futuro, será possível criar uma implementação para um banco real e
-trocar apenas a configuração responsável por montar a aplicação.
+```text
+http://127.0.0.1:8000
+```
 
-## 3. Métodos HTTP
+## Endpoints disponíveis
 
-Os métodos indicam a intenção da operação:
-
-| Método | Finalidade | Exemplo ilustrativo |
+| Método | Caminho | Resultado |
 |---|---|---|
-| `GET` | Consultar recursos | Listar IFPI Mons |
-| `POST` | Criar um recurso | Cadastrar um IFPI Mon |
-| `PUT` | Substituir um recurso | Atualizar todos os seus dados |
-| `PATCH` | Alterar parte de um recurso | Alterar apenas seu nome |
-| `DELETE` | Remover um recurso | Excluir um IFPI Mon |
+| `GET` | `/` | Informações básicas da API |
+| `GET` | `/api/ifpimons` | Lista todos os IFPI Mons |
+| `GET` | `/api/ifpimons/{ifpimon_id}` | Busca um IFPI Mon pelo ID |
+| `GET` | `/docs` | Interface Swagger UI gerada pelo FastAPI |
+| `GET` | `/redoc` | Interface ReDoc gerada pelo FastAPI |
+| `GET` | `/openapi.json` | Contrato OpenAPI da aplicação |
 
-O método faz parte do contrato. Por exemplo, consultar um recurso não deve
-alterar dados, enquanto uma exclusão não deve ser realizada por `GET`.
+Não existem endpoints `POST`, `PUT`, `PATCH` ou `DELETE` nesta versão.
 
-## 4. Caminho de uma requisição
+## Rota raiz
 
-Considere, como exemplo, uma futura consulta `GET /ifpimons/10`.
+Requisição:
 
-1. O cliente envia a requisição para buscar o IFPI Mon de identificador `10`.
-2. A aplicação identifica a rota correspondente.
-3. Os parâmetros recebidos são validados.
-4. O caso de uso de busca é executado.
-5. O repositório consulta os dados mockados mantidos em memória.
-6. Se o registro existir, a API monta a representação de saída.
-7. A API responde com o status `200 OK` e os dados em JSON.
-8. Se o registro não existir, o erro da aplicação é convertido em `404 Not
-   Found`.
+```http
+GET /
+```
+
+Resposta atual:
+
+```json
+{
+  "name": "IFPIMon API",
+  "docs": "/docs",
+  "ifpimons": "/api/ifpimons",
+  "ifpimon_by_id": "/api/ifpimons/1"
+}
+```
+
+As operações de IFPI Mon usam o prefixo real `/api/ifpimons`.
+
+## Listar todos os IFPI Mons
+
+Requisição:
+
+```http
+GET /api/ifpimons
+```
+
+Resposta atual:
+
+```http
+200 OK
+```
+
+```json
+[
+  {
+    "id": 1,
+    "nome": "Celtinha",
+    "tipo": "Metal",
+    "treinador": "Vitor"
+  }
+]
+```
+
+O fluxo interno é:
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Cliente
-    participant API as Rota da API
-    participant Caso as Caso de uso
-    participant Repo as Repositório
-    participant Memoria as Dados em memória
+    participant R as Route
+    participant C as Controller
+    participant U as GetAllIFPIMons
+    participant Repo as Repository em memória
 
-    Cliente->>API: GET /ifpimons/10
-    API->>Caso: buscar_por_id(10)
-    Caso->>Repo: buscar_por_id(10)
-    Repo->>Memoria: consulta pelo identificador
-    Memoria-->>Repo: registro encontrado
-    Repo-->>Caso: IFPI Mon
-    Caso-->>API: resultado
-    API-->>Cliente: 200 OK + JSON
+    Cliente->>R: GET /api/ifpimons
+    R->>C: get_all_execute()
+    C->>U: execute()
+    U->>Repo: get_all()
+    Repo-->>U: lista de IFPI Mons
+    U-->>C: lista
+    C-->>R: lista
+    R-->>Cliente: 200 + JSON
 ```
 
-### Exemplo de resposta bem-sucedida
+Se a lista em memória estiver vazia, a resposta será:
 
-O formato abaixo é ilustrativo:
+```json
+[]
+```
+
+## Buscar um IFPI Mon existente
+
+Requisição:
+
+```http
+GET /api/ifpimons/1
+```
+
+Resposta:
+
+```http
+200 OK
+```
 
 ```json
 {
-  "id": 10,
-  "nome": "Exemplo Mon",
-  "tipo": "tecnologia"
+  "id": 1,
+  "nome": "Celtinha",
+  "tipo": "Metal",
+  "treinador": "Vitor"
 }
 ```
 
-## 5. Exemplo de criação
-
-Em uma futura rota `POST /ifpimons`, o cliente enviaria os dados necessários no
-corpo da requisição:
-
-```json
-{
-  "nome": "Exemplo Mon",
-  "tipo": "tecnologia"
-}
-```
-
-O fluxo esperado seria:
+O valor `1` é convertido pelo FastAPI para `int` e entregue à função da route.
+Depois, route, controller e use case repassam o mesmo ID até o repository.
 
 ```mermaid
-flowchart TD
-    A[Receber os dados] --> B{Formato válido?}
-    B -- Não --> C[Responder 422]
-    B -- Sim --> D{Regras de negócio atendidas?}
-    D -- Não --> E[Responder erro de domínio]
-    D -- Sim --> F[Salvar o recurso]
-    F --> G[Responder 201 com o recurso criado]
+sequenceDiagram
+    autonumber
+    actor Cliente
+    participant R as Route
+    participant C as Controller
+    participant U as GetIFPIMonById
+    participant Repo as Repository em memória
+
+    Cliente->>R: GET /api/ifpimons/1
+    R->>C: get_by_id_execute(1)
+    C->>U: execute(1)
+    U->>Repo: get_by_id(1)
+    Repo-->>U: Celtinha
+    U-->>C: IFPIMonSchema
+    C-->>R: IFPIMonSchema
+    R-->>Cliente: 200 + JSON
 ```
 
-É importante diferenciar as duas validações:
+## Buscar um ID inexistente
 
-- a **validação de entrada** verifica formato, tipo e campos obrigatórios;
-- a **validação de negócio** verifica regras próprias do projeto, como a
-  impossibilidade de cadastrar um nome duplicado, caso essa regra seja adotada.
+Requisição:
 
-## 6. Códigos de resposta
+```http
+GET /api/ifpimons/999
+```
 
-A API deve utilizar códigos HTTP de maneira consistente:
+Resposta:
 
-| Código | Significado | Quando utilizar |
-|---|---|---|
-| `200 OK` | Operação concluída | Consultas e atualizações com resposta |
-| `201 Created` | Recurso criado | Cadastro concluído |
-| `204 No Content` | Sucesso sem corpo | Exclusão concluída |
-| `400 Bad Request` | Requisição inválida | Regra geral da requisição não atendida |
-| `404 Not Found` | Recurso inexistente | Identificador não encontrado |
-| `409 Conflict` | Conflito com o estado atual | Cadastro duplicado, quando não permitido |
-| `422 Unprocessable Content` | Dados não validáveis | Campo obrigatório ausente ou tipo inválido |
-| `500 Internal Server Error` | Erro inesperado | Falha não prevista pela aplicação |
-
-O corpo de erro deve seguir um formato único. Um exemplo possível é:
+```http
+404 Not Found
+```
 
 ```json
 {
   "error": "ifpimon_not_found",
-  "message": "IFPI Mon de identificador 10 não foi encontrado."
+  "message": "IFPI Mon com ID 999 não foi encontrado."
 }
 ```
 
-O campo `error` é estável e pode ser interpretado por outros sistemas. O campo
-`message` apresenta uma explicação legível para uma pessoa.
-
-## 7. Tratamento de erros
-
-Erros esperados não devem ser tratados como falhas desconhecidas. A aplicação
-deve definir exceções próprias, como `IfpiMonNotFoundError`, e registrá-las em
-handlers centralizados.
+O repository devolve `None`, e o use case transforma essa ausência em
+`IFPIMonNotFoundError`. O FastAPI encontra o handler registrado e devolve a
+resposta HTTP.
 
 ```mermaid
-flowchart LR
-    U[Caso de uso] -->|lança exceção da aplicação| H[Exception handler]
-    H --> M[Define status e mensagem]
-    M --> J[Resposta JSON padronizada]
+sequenceDiagram
+    autonumber
+    actor Cliente
+    participant R as Route
+    participant C as Controller
+    participant U as GetIFPIMonById
+    participant Repo as Repository em memória
+    participant H as Handler
+
+    Cliente->>R: GET /api/ifpimons/999
+    R->>C: get_by_id_execute(999)
+    C->>U: execute(999)
+    U->>Repo: get_by_id(999)
+    Repo-->>U: None
+    U-->>H: lança IFPIMonNotFoundError
+    H-->>Cliente: 404 + JSON padronizado
 ```
 
-Esse mecanismo evita a repetição de blocos `try/except` nas rotas e garante que
-o mesmo erro sempre produza o mesmo código e formato de resposta. Erros internos
-não devem expor rastreamentos, consultas ou informações sensíveis ao cliente.
+Não há `try/except` nesse fluxo. O mecanismo de exception handlers do FastAPI
+realiza o encaminhamento automaticamente.
 
-## 8. Documentação interativa
+## Enviar um ID inválido
 
-Ao criar a aplicação com FastAPI, os schemas, parâmetros, respostas e descrições
-das rotas podem gerar documentação OpenAPI automaticamente. Durante o
-desenvolvimento, os endereços normalmente utilizados são:
+Requisição:
 
-- `/docs` para a interface Swagger UI;
-- `/redoc` para a interface ReDoc;
-- `/openapi.json` para o contrato OpenAPI em JSON.
+```http
+GET /api/ifpimons/abc
+```
 
-Essas páginas ajudam a experimentar endpoints, mas não substituem esta
-documentação: elas descrevem o contrato técnico atual, enquanto estes arquivos
-registram decisões, responsabilidades e fluxos do projeto.
+A função da route declara `ifpimon_id: int`. Como `abc` não pode ser convertido
+para inteiro, o FastAPI rejeita a requisição antes de chamar o controller e
+responde com:
 
-## 9. Resumo do funcionamento
+```http
+422 Unprocessable Content
+```
 
-Uma operação completa deve:
+Esse erro utiliza atualmente o formato padrão de validação do FastAPI.
 
-1. receber a requisição;
-2. reconhecer a rota;
-3. validar os dados de entrada;
-4. executar um caso de uso;
-5. consultar ou alterar dados por meio de um repositório;
-6. converter o resultado para um schema de saída;
-7. devolver o status HTTP apropriado;
-8. transformar erros conhecidos em respostas padronizadas.
+## Modelo de dados
 
-Esse fluxo mantém o comportamento da API previsível para quem a utiliza e
-permite que sua implementação evolua sem misturar as responsabilidades internas.
+Todo IFPI Mon possui:
+
+| Campo | Tipo | Obrigatório |
+|---|---|---|
+| `id` | inteiro | Sim |
+| `nome` | texto | Sim |
+| `tipo` | texto | Sim |
+| `treinador` | texto ou `null` | Não |
+
+Representação JSON:
+
+```json
+{
+  "id": 1,
+  "nome": "Celtinha",
+  "tipo": "Metal",
+  "treinador": "Vitor"
+}
+```
+
+## Armazenamento em memória
+
+A API não está conectada a um banco de dados. Uma instância de
+`InMemoryIFPIMonRepository` é criada em `dependencies.py` e contém uma lista de
+objetos `IFPIMonSchema`.
+
+Consequências:
+
+- não é necessário configurar um banco;
+- a leitura é realizada diretamente na lista;
+- alterações futuras existiriam somente durante a execução;
+- reiniciar o servidor restaura os dados definidos no código;
+- o contrato `IFPIMonRepository` permite substituir essa implementação no
+  futuro.
+
+## Testar pelo Swagger
+
+Com o servidor em execução, acesse:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+Na interface:
+
+1. abra uma operação de IFPI Mons;
+2. selecione **Try it out**;
+3. informe o ID quando necessário;
+4. selecione **Execute**;
+5. confira o status e o corpo da resposta.
+
+## Resumo dos resultados testados
+
+| Requisição | Status atual | Resultado |
+|---|---:|---|
+| `GET /` | 200 | Informações da API |
+| `GET /api/ifpimons` | 200 | Lista contendo Celtinha |
+| `GET /api/ifpimons/1` | 200 | Dados de Celtinha |
+| `GET /api/ifpimons/999` | 404 | Erro `ifpimon_not_found` |
+| `GET /api/ifpimons/abc` | 422 | Erro padrão de validação |
+
+Esses resultados foram verificados contra a implementação atual.

@@ -1,7 +1,6 @@
 # Como contribuir
 
-Este guia deve ser seguido em qualquer alteração feita no projeto. Antes de
-contribuir, leia também o [Código de Conduta](CODE_OF_CONDUCT.md).
+Este guia deve ser seguido em qualquer alteração feita no projeto.
 
 ## Branches
 
@@ -63,5 +62,4 @@ em um único objetivo e:
 3. informe como a alteração foi testada;
 4. confirme os itens da lista de verificação.
 
-Ao enviar uma contribuição, você concorda em seguir estas regras e o Código de
-Conduta do projeto.
+Ao enviar uma contribuição, você concorda em seguir estas regras.

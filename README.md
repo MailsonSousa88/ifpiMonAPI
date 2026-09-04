@@ -1,12 +1,21 @@
 # IFPI Mon API
 
-API desenvolvida em Python como parte da disciplina de Programação para
-Internet II. O projeto utilizará FastAPI e será construído com uma arquitetura
-em camadas, separando o contrato HTTP, os casos de uso e o acesso aos dados.
+## Revisores
 
-> [!NOTE]
-> O projeto está em sua estrutura inicial. Os endpoints e as regras de negócio
-> ainda serão implementados.
+As principais revisões e aprovações do projeto são realizadas por:
+
+| Revisor | Perfil no GitHub |
+|---|---|
+| Mailson Sousa | [@MailsonSousa88](https://github.com/MailsonSousa88) |
+| Roger Pierre | [@RogerPierre](https://github.com/RogerPierre) |
+| Rikelry Souza | [@Rikelry](https://github.com/Rikelry) |
+
+API de consulta dos IFPI Mons, desenvolvida em Python com FastAPI como parte
+da disciplina de Programação para Internet II.
+
+O projeto usa uma arquitetura em camadas para separar as rotas HTTP, os
+controllers, os casos de uso e o acesso aos dados. Atualmente, é possível
+listar todos os IFPI Mons e buscar um deles pelo ID.
 
 ## Tecnologias
 
@@ -17,14 +26,14 @@ em camadas, separando o contrato HTTP, os casos de uso e o acesso aos dados.
 
 ## Armazenamento dos dados
 
-A primeira versão não utilizará um banco de dados externo. Os IFPI Mons serão
-dados mockados, mantidos em memória enquanto a aplicação estiver em execução.
-Ao reiniciar o servidor, os dados retornarão ao estado inicial.
+A versão atual não utiliza um banco de dados externo. Os IFPI Mons são dados
+mockados, mantidos em memória enquanto a aplicação está em execução. Ao
+reiniciar o servidor, os dados retornam ao estado inicial.
 
-O acesso aos dados será feito por meio do contrato `IfpiMonRepository`. A
-implementação inicial será `InMemoryIfpiMonRepository`, permitindo que, no
-futuro, o armazenamento seja substituído por um banco real sem alterar as
-rotas, os controllers ou os casos de uso.
+O acesso aos dados é definido pelo contrato `IFPIMonRepository`. A
+implementação atual é `InMemoryIFPIMonRepository`, permitindo que, no futuro,
+o armazenamento seja substituído por um banco real sem alterar as rotas, os
+controllers ou os casos de uso.
 
 ## Requisitos
 
@@ -41,24 +50,34 @@ cd ifpiMonAPI
 uv sync
 ```
 
-## Execução atual
+## Execução
 
-Enquanto a aplicação FastAPI ainda não foi criada, execute o ponto de entrada
-inicial com:
+Inicie o servidor de desenvolvimento na raiz do projeto:
 
 ```bash
-uv run python api/main.py
+uv run fastapi dev api/main.py
 ```
 
-Neste momento, o comando apenas confirma que o ambiente do projeto está
-funcionando. O comando de inicialização do servidor será documentado quando a
-instância do FastAPI for implementada.
+A API ficará disponível em `http://127.0.0.1:8000`. A documentação interativa
+do FastAPI poderá ser acessada em `http://127.0.0.1:8000/docs`.
+
+## Endpoints atuais
+
+| Método | Caminho | Descrição |
+|---|---|---|
+| `GET` | `/` | Apresenta informações e links da API |
+| `GET` | `/api/ifpimons` | Lista todos os IFPI Mons |
+| `GET` | `/api/ifpimons/{ifpimon_id}` | Busca um IFPI Mon pelo ID |
+
+Quando o ID informado não existe, a API responde com o status `404` e uma
+mensagem produzida pelo handler centralizado de exceções.
 
 ## Arquitetura
 
 ```text
 api/
 ├── main.py
+├── dependencies.py
 ├── controllers/
 ├── exceptions/
 ├── repositories/
@@ -70,30 +89,29 @@ api/
 
 Responsabilidade resumida de cada camada:
 
-- **routes:** define os endpoints e o contrato HTTP;
-- **controllers:** coordena a entrada, a saída e a chamada dos casos de uso;
+- **routes:** define os endpoints e recebe as requisições HTTP;
+- **controllers:** coordena a chamada dos casos de uso;
 - **usecases:** implementa as ações e regras da aplicação;
-- **services:** encapsula capacidades externas ou compartilhadas;
-- **repositories:** define o contrato e as implementações de acesso aos dados;
-- **schemas:** valida os dados de entrada e saída;
-- **exceptions:** centraliza erros conhecidos e seus handlers HTTP.
+- **services:** reserva capacidades externas ou compartilhadas;
+- **repositories:** define o contrato e o acesso aos dados;
+- **schemas:** define e valida os formatos dos dados;
+- **exceptions:** centraliza erros conhecidos e seus handlers HTTP;
+- **dependencies.py:** cria e conecta repository, casos de uso e controller;
+- **main.py:** inicializa o FastAPI, registra os handlers e inclui as rotas.
 
 Consulte a documentação detalhada:
 
 - [Arquitetura da API](docs/api/arquitetura.md);
-- [Funcionamento da API](docs/api/funcionamento.md).
+- [Funcionamento da API](docs/api/funcionamento.md);
+- [Catálogo atual](docs/wiki/catalogo.md).
 
-## Estado do projeto
+## Testes
 
-- [x] Estrutura inicial das camadas;
-- [x] Documentação da arquitetura e do funcionamento;
-- [x] Templates para issues e pull requests;
-- [ ] Aplicação FastAPI;
-- [ ] Entidades e schemas;
-- [ ] Repository em memória com dados mockados;
-- [ ] Casos de uso, controllers e rotas;
-- [ ] Testes automatizados;
-- [ ] Publicação no Render.
+Execute os testes automáticos com:
+
+```bash
+uv run python -m unittest discover
+```
 
 ## Contribuição
 

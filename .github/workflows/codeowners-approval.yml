@@ -1,0 +1,69 @@
+name: Code Owners approval
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  require-code-owner-approval:
+    name: Require Code Owner approval
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Verify approval
+        uses: actions/github-script@v9
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const codeOwners = new Set([
+              "mailsonsousa88",
+              "rogerpierre",
+              "rikelry",
+            ]);
+
+            const pullRequest = context.payload.pull_request;
+            const reviews = await github.paginate(
+              github.rest.pulls.listReviews,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pullRequest.number,
+                per_page: 100,
+              },
+            );
+
+            const latestReviewByOwner = new Map();
+
+            for (const review of reviews) {
+              const login = review.user?.login?.toLowerCase();
+
+              if (login && codeOwners.has(login)) {
+                latestReviewByOwner.set(login, review);
+              }
+            }
+
+            const approvedOwners = [...latestReviewByOwner.entries()]
+              .filter(([, review]) => (
+                review.state === "APPROVED"
+                && review.commit_id === pullRequest.head.sha
+              ))
+              .map(([login]) => `@${login}`);
+
+            if (approvedOwners.length === 0) {
+              core.setFailed(
+                "Este PR precisa da aprovação de pelo menos um Code Owner: "
+                + "@MailsonSousa88, @RogerPierre ou @Rikelry.",
+              );
+              return;
+            }
+
+            core.info(
+              `PR aprovado por Code Owner: ${approvedOwners.join(", ")}`,
+            );
