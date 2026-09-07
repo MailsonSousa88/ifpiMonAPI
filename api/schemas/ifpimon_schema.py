@@ -7,4 +7,6 @@ class IFPIMonSchema(BaseModel):
     id: int
     nome: str
     tipo: str
+    descricao: str 
     treinador: str | None = None
+    image_url: str
