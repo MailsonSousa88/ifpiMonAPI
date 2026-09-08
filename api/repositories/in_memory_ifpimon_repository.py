@@ -8,9 +8,27 @@ class InMemoryIFPIMonRepository:
         self._ifpimons: list[IFPIMonSchema] = [
             IFPIMonSchema(
                 id=1,
-                nome="Celtinha",
+                nome="Celtamon",
                 tipo="Metal",
                 treinador="Vitor",
+                image_url="/public/ifpimons/celtamon.webp",
+                descricao="Clássica referência.."
+            ),
+            IFPIMonSchema(
+                id=2,
+                nome="GPTmon",
+                tipo="Elétrico",
+                treinador="Gabriel",
+                image_url="/public/ifpimons/gptmon.webp",
+                descricao="Ele sabe de mais..."
+            ),
+            IFPIMonSchema(
+                id=3,
+                nome="Bombomon",
+                tipo="Objeto",
+                treinador="Geovany",
+                image_url="/public/ifpimons/bombomon.webp",
+                descricao="Objeto ou Método?"
             )
         ]
     # Esse metodo e responsavel por procurar a um ifpimon por id, retorna o objeto se encontrado caso contrario retorna "None"
