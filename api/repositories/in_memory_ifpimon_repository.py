@@ -29,6 +29,14 @@ class InMemoryIFPIMonRepository:
                 treinador="Geovany",
                 image_url="/public/ifpimons/bombomon.webp",
                 descricao="Objeto ou Método?"
+            ),
+            IFPIMonSchema(
+                id = 4,
+                nome = "Caixadaguamon",
+                tipo = "Água",
+                descricao = "Exótico, não?",
+                treinador = "Heber",
+                image_url = "/public/ifpimons/caixadagua.webp"
             )
         ]
     # Esse metodo e responsavel por procurar a um ifpimon por id, retorna o objeto se encontrado caso contrario retorna "None"
