@@ -34,6 +34,7 @@ class InMemoryIFPIMonRepository:
                 id = 4,
                 nome = "Caixadaguamon",
                 tipo = "Água",
+                descricao = "Exótico, não?",
                 treinador = "Heber",
                 image_url = "/public/ifpimons/caixadagua.webp"
             )
