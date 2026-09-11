@@ -29,6 +29,38 @@ class InMemoryIFPIMonRepository:
                 treinador="Geovany",
                 image_url="/public/ifpimons/bombomon.webp",
                 descricao="Objeto ou Método?"
+            ),
+            IFPIMonSchema(
+                id=4,
+                nome="Caixadaguamon",
+                tipo="Água",
+                descricao="Exótico, não?",
+                treinador="Heber",
+                image_url="/public/ifpimons/caixadagua.webp"
+            ),
+            IFPIMonSchema(
+                id=5,
+                nome="Chinelamon",
+                tipo="Terra",
+                treinador="Vitor",
+                image_url="/public/ifpimons/chinelamon.webp",
+                descricao="Suposto pé grande"                
+            ),
+            IFPIMonSchema(
+                id=6,
+                nome="Nobreakmon",
+                tipo="Elétrico",
+                treinador="Cássio",
+                image_url="/public/ifpimons/nobreakmon.webp",
+                descricao="Capacidade infinita"
+            ),
+            IFPIMonSchema(
+                id=7,
+                nome="Hipnomon",
+                tipo="Psíquico",
+                treinador="Iallen",
+                image_url="/public/ifpimons/hipnomon.webp",
+                descricao="Conhecido por embaralhar a mente dos seus oponentes!"
             )
         ]
     # Esse metodo e responsavel por procurar a um ifpimon por id, retorna o objeto se encontrado caso contrario retorna "None"
